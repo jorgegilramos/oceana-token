@@ -4,7 +4,7 @@
 import pytest
 
 from oceana_token import Authenticate
-from oceana_token.exceptions import OceanaError, HttpResponseError, ServiceRequestError, ClientAuthenticationError
+from oceana_token.exceptions import OceanaError, ClientAuthenticationError
 
 
 # This fixture has to be in this file because monkeypath is not allowed with a session scoped request object
@@ -23,12 +23,11 @@ def mock_env_variables(monkeypatch):
     # monkeypatch.delenv("OCEANA_API_LOGGER_FORMAT")
 
 
-
 def test_get_token_env_ok(mock_env_variables):
     """
     Authentication in Oceana API from environment variables
     """
-    
+
     # import os
     # print(os.environ["OCEANA_API_URL"])
     # print(os.environ["OCEANA_API_CLIENT_ID"])
@@ -46,11 +45,11 @@ def test_get_token_parameters_ok():
     """
     Authentication in Oceana API from parameters
     """
-    
+
     # Authentication in Oceana API
     oceana_api_client = Authenticate(url="http://127.0.0.1:5000",
-                                    client_id="oceana-api-client",
-                                    client_secret="bad_password")
+                                     client_id="oceana-api-client",
+                                     client_secret="bad_password")
     token = oceana_api_client.get_token()
     assert token == "Bearer <token>"
 
@@ -67,7 +66,8 @@ def test_get_token_missing_exception():
     # Validate exception
     with pytest.raises(OceanaError) as exc_info:
         oceana_api_client.get_token()
-    assert str(exc_info.value) == "Oceana API client secret not specified. It can be set with url param at creation or setting environment variable OCEANA_API_CLIENT_SECRET"
+    assert str(exc_info.value) == "Oceana API client secret not specified. It can be set with url param " + \
+        "at creation or setting environment variable OCEANA_API_CLIENT_SECRET"
 
 
 def test_get_token_credential_exception():

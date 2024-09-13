@@ -25,7 +25,7 @@ def test_authorization_header_ok(mock_oceana_api_client):
     """
     Test authorization header
     """
-    
+
     headers = mock_oceana_api_client.authorization_header(headers={})
     assert headers == {"Authorization": "Bearer <token>"}
 
@@ -35,9 +35,9 @@ def test_headers_ok(mock_oceana_api_client):
     Test headers method
     """
     input_headers = {
-        "Content-Type": "application/text", # This value will be changed
-        "Accept": "application/text",       # This value will be changed
-        "Authorization": "",                # This value will be changed
+        "Content-Type": "application/text",  # This value will be changed
+        "Accept": "application/text",        # This value will be changed
+        "Authorization": "",                 # This value will be changed
         "X-Header": "value"
     }
 
@@ -48,5 +48,3 @@ def test_headers_ok(mock_oceana_api_client):
         "Authorization": "Bearer <token>",
         "X-Header": "value"
     }
-
-

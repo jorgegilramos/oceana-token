@@ -45,7 +45,7 @@ def decode_jwt(token):
     Tries to retrieve payload information inside of a existent JWT token (string)
     Will throw an error if the token is invalid (expired or inconsistent)
     """
-    
+
     return jwt.decode(token, APP_OCEANA_API_SECRET_KEY, algorithms=["HS256"])
 
 
@@ -60,7 +60,7 @@ def check_jwt(headers):
         raise Exception("Missing access token")
 
     if not token.startswith("Bearer "):
-        raise Exception(f"Authorization header must follow pattern \"Bearer <token_value>\"")
+        raise Exception("Authorization header must follow pattern \"Bearer <token_value>\"")
     jwt = token.split("Bearer ")[1]
 
     try:
@@ -106,7 +106,7 @@ json_response_unauthorized_error = {
 @pytest.fixture
 def mock_auth_token_endpoint():
     with requests_mock.Mocker() as requests_mocker:
-        
+
         def match_organization_jwt_client1(request):
             payload = check_jwt(headers=request.headers)
             # print(payload)
@@ -121,22 +121,24 @@ def mock_auth_token_endpoint():
                 payload["iss"] == APP_OCEANA_API_NAME and payload["version"] == APP_OCEANA_API_TOKEN_VERSION and \
                 "reader" not in payload["roles"]
 
-        requests_mocker.get(f"http://127.0.0.1:5000/v1/organization/id/1", additional_matcher=match_organization_jwt_client1, status_code=200, json={})
-        requests_mocker.get(f"http://127.0.0.1:5000/v1/organization/id/1", additional_matcher=match_organization_jwt_client2, status_code=403,
+        requests_mocker.get("http://127.0.0.1:5000/v1/organization/id/1",
+                            additional_matcher=match_organization_jwt_client1, status_code=200, json={})
+        requests_mocker.get("http://127.0.0.1:5000/v1/organization/id/1",
+                            additional_matcher=match_organization_jwt_client2, status_code=403,
                             json=json_response_unauthorized_error)
         yield
 
 
 def test_endpoint_jwt_ok(mock_auth_token_endpoint):
-    
-    endpoint_url = f"http://127.0.0.1:5000/v1/organization/id/1"
+
+    endpoint_url = "http://127.0.0.1:5000/v1/organization/id/1"
     payload = {
         "client_id": "oceana-api-client1",
         "client_type": "application",
         "roles": ["reader", "writer"]
     }
 
-    token = f"Bearer {generate_jwt(payload=payload)}" 
+    token = f"Bearer {generate_jwt(payload=payload)}"
     headers = json.loads(oceana_api_auth_header.format(token=token))
     print(headers)
     response = requests.get(url=endpoint_url, headers=headers, verify=False)
@@ -145,15 +147,15 @@ def test_endpoint_jwt_ok(mock_auth_token_endpoint):
 
 
 def test_endpoint_jwt_unauthorized(mock_auth_token_endpoint):
-    
-    endpoint_url = f"http://127.0.0.1:5000/v1/organization/id/1"
+
+    endpoint_url = "http://127.0.0.1:5000/v1/organization/id/1"
     payload = {
         "client_id": "oceana-api-client2",
         "client_type": "application",
         "roles": []
     }
 
-    token = f"Bearer {generate_jwt(payload=payload)}" 
+    token = f"Bearer {generate_jwt(payload=payload)}"
     headers = json.loads(oceana_api_auth_header.format(token=token))
     print(headers)
     response = requests.get(url=endpoint_url, headers=headers, verify=False)

@@ -2,6 +2,7 @@
 
 import base64
 
+
 def string_base64(s):
     return base64.b64encode(s.encode("utf-8")) if isinstance(s, str) else None
 

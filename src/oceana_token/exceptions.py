@@ -1,7 +1,7 @@
 # coding: utf-8
 
-
 import sys
+
 
 class OceanaError(Exception):
     """

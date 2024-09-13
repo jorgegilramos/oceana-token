@@ -9,7 +9,7 @@ HERE = pathlib.Path(__file__).parent
 PACKAGE_NAME = "oceana_token"
 VERSION = "0.0.1"
 AUTHOR = "jorgegilramos"
-DESCRIPTION="Oceana API library to manage authentication token and headers"
+DESCRIPTION = "Oceana API library to manage authentication token and headers"
 LONG_DESCRIPTION = (HERE / "README.md").read_text(encoding="utf-8")
 LONG_DESC_TYPE = "text/markdown"
 PROGRAMMING = "Programming Language :: Python :: 3"
@@ -18,7 +18,7 @@ OSINFO = "Operating System :: OS Independent"
 
 
 def parse_requirements(filename):
-    
+
     filename = f"{HERE}{os.path.sep}{filename}"
     print(f"Filename: {filename}")
     lines_iterator = (line.strip() for line in open(filename))
@@ -30,7 +30,7 @@ setup(
     version=VERSION,
     packages=find_namespace_packages(where="src"),
     package_dir={"": "src"},
-    #package_data={"oceana_token.conf": ["*.ini", "*.txt"]},
+    # package_data={"oceana_token.conf": ["*.ini", "*.txt"]},
     description=DESCRIPTION,
     long_description=LONG_DESCRIPTION,
     long_description_content_type=LONG_DESC_TYPE,
@@ -38,7 +38,7 @@ setup(
     license=LICENSE,
     install_requires=parse_requirements("requirements.txt"),
     include_package_data=True,
-    #tests_require=parse_requirements("requirements_test.txt")
+    # tests_require=parse_requirements("requirements_test.txt")
     classifiers=[
         PROGRAMMING,
         LICENSE,

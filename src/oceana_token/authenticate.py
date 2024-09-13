@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 def configure_logger():
     logger_level = config("OCEANA_API_LOGGER_LEVEL", oceana_api_logger_level)
     logger_format = config("OCEANA_API_LOGGER_FORMAT", oceana_api_logger_format)
-    if logger_level is not None: 
+    if logger_level is not None:
         logger.setLevel(logger_level)
 
     if logger_format is not None:
@@ -29,6 +29,7 @@ def configure_logger():
         formatter = logging.Formatter(logger_format)
         ch.setFormatter(formatter)
         logger.addHandler(ch)
+
 
 # Configure logger when importing module
 configure_logger()
@@ -50,42 +51,24 @@ class Authenticate:
         # Refresh logger environment variables
         configure_logger()
 
-
     def get_token(self):
         if not self.is_token_valid():
             logger.info("Getting Oceana API token")
             self.authenticate()
         return self._oceana_api_token
-    
 
     def authenticate(self):
 
-        url = self._get_env_param(
-            value=self._url,
-            env_var=oceana_api_url,
-            env_param="OCEANA_API_URL",
-            error_msg="Oceana API url not specified. It can be set with url param at creation or setting environment variable OCEANA_API_URL")
-
-        client_id = self._get_env_param(
-            value=self._client_id,
-            env_var=oceana_api_client_id,
-            env_param="OCEANA_API_CLIENT_ID",
-            error_msg="Oceana API client id not specified. It can be set with url param at creation or setting environment variable OCEANA_API_CLIENT_ID")
-
-        client_secret = self._get_env_param(
-            value=base64_string(self._client_secret),
-            env_var=oceana_api_client_secret,
-            env_param="OCEANA_API_CLIENT_SECRET",
-            error_msg="Oceana API client secret not specified. It can be set with url param at creation or setting environment variable OCEANA_API_CLIENT_SECRET")
+        url, client_id, client_secret = self._get_parameters()
 
         url = url + f"/{oceana_api_endpoint}"
 
         json_data = {
             "client_id": client_id,
             "client_secret": client_secret,
-            #"grant_type": "client_credentials"
+            # "grant_type": "client_credentials"
         }
-        
+
         headers = {
             "Content-Type": "application/json"
         }
@@ -99,29 +82,20 @@ class Authenticate:
             response.raise_for_status()
         except requests.exceptions.HTTPError as e:
             if response.status_code not in [400, 401]:
-                #raise HttpResponseError(f"{e.response.text}") from e
+                # raise HttpResponseError(f"{e.response.text}") from e
                 raise HttpResponseError(message=f"{e.args[0]}", response=response) from e
-    
+
         try:
             # Get response in json
-            token_json = response.json()  # type: ignore 
-            status_code = int(token_json["code"]) if "code" in token_json.keys() and isinstance(token_json["code"], int) else response.status_code
+            token_json = response.json()  # type: ignore
+            status_code = int(token_json["code"]) if "code" in token_json.keys() and isinstance(token_json["code"], int) \
+                else response.status_code
         except Exception as e:
             raise OceanaError(f"{e}")
- 
-        if not response.ok:
-            try:
-                error_msg = token_json["message"]
-            except Exception as e:
-                error_msg = response.reason
-            logger.error(f"{error_msg}")
 
-            if status_code == 400:
-                raise ServiceRequestError(error_msg)
-            elif status_code == 401:
-                raise ClientAuthenticationError(error_msg)
-            else:
-                raise HttpResponseError(error_msg)
+        # Raise exception if response is not ok
+        if not response.ok:
+            self._response_raise_error(response, token_json, status_code)
 
         # Get token from response
         if status_code == 200:
@@ -139,7 +113,6 @@ class Authenticate:
             raise OceanaError(error_msg)
 
         return response
-
 
     def is_token_valid(self, response_json=None):
 
@@ -160,31 +133,27 @@ class Authenticate:
             logger.debug("No token yet or token is not valid anymore")
             return False
 
-
-    def authorization_header(self, headers: dict={}) -> dict:
+    def authorization_header(self, headers: dict = {}) -> dict:
         """
         Update authorization header
         """
-        token = self.get_token()    
+        token = self.get_token()
         headers.update({"Authorization": token} or {})
         logger.debug(f"headers: {headers}")
         return headers
 
-
-    def headers(self, headers: dict={}) -> dict:
+    def headers(self, headers: dict = {}) -> dict:
         """
         Update common api header with token for all requests
         """
-        _headers = json.loads(oceana_api_auth_header.format(token=self.get_token()))  
+        _headers = json.loads(oceana_api_auth_header.format(token=self.get_token()))
         headers.update(_headers or {})
         logger.debug(f"headers: {headers}")
         return headers
 
-
     @property
     def session(self):
         return self._oceana_api_session
-
 
     def close_session(self):
         """
@@ -193,7 +162,6 @@ class Authenticate:
         if self.session is not None:
             self._oceana_api_session.close()
             self._oceana_api_session = None
-
 
     def _get_env_param(self, value, env_var, env_param, error_msg):
         if not value:
@@ -204,3 +172,42 @@ class Authenticate:
         else:
             ret_value = value
         return ret_value
+
+    def _get_parameters(self):
+
+        url = self._get_env_param(
+            value=self._url,
+            env_var=oceana_api_url,
+            env_param="OCEANA_API_URL",
+            error_msg="Oceana API url not specified. It can be set with url param " +
+                      "at creation or setting environment variable OCEANA_API_URL")
+
+        client_id = self._get_env_param(
+            value=self._client_id,
+            env_var=oceana_api_client_id,
+            env_param="OCEANA_API_CLIENT_ID",
+            error_msg="Oceana API client id not specified. It can be set with url param " +
+                      "at creation or setting environment variable OCEANA_API_CLIENT_ID")
+
+        client_secret = self._get_env_param(
+            value=base64_string(self._client_secret),
+            env_var=oceana_api_client_secret,
+            env_param="OCEANA_API_CLIENT_SECRET",
+            error_msg="Oceana API client secret not specified. It can be set with url param " +
+                      "at creation or setting environment variable OCEANA_API_CLIENT_SECRET")
+
+        return url, client_id, client_secret
+
+    def _response_raise_error(self, response, token_json, status_code):
+        try:
+            error_msg = token_json["message"]
+        except Exception:
+            error_msg = response.reason
+        logger.error(f"{error_msg}")
+
+        if status_code == 400:
+            raise ServiceRequestError(error_msg)
+        elif status_code == 401:
+            raise ClientAuthenticationError(error_msg)
+        else:
+            raise HttpResponseError(error_msg)

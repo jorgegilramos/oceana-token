@@ -44,9 +44,15 @@ def mock_auth_token_endpoint():
 
         def match_data_credential_error(request):
             return request.json() == json_data_credential_error
-        
-        requests_mocker.post(f"http://127.0.0.1:5000/v1/auth/token", additional_matcher=match_data_ok, status_code=200, json=json_response_ok)
-        requests_mocker.post(f"http://127.0.0.1:5000/v1/auth/token", additional_matcher=match_data_credential_error, status_code=401, json=json_response_credentials_error)
+
+        requests_mocker.post("http://127.0.0.1:5000/v1/auth/token",
+                             additional_matcher=match_data_ok,
+                             status_code=200,
+                             json=json_response_ok)
+        requests_mocker.post("http://127.0.0.1:5000/v1/auth/token",
+                             additional_matcher=match_data_credential_error,
+                             status_code=401,
+                             json=json_response_credentials_error)
         yield
 
 
@@ -55,6 +61,6 @@ def mock_oceana_api_client():
 
     # Authentication in Oceana API
     api_client = Authenticate(url="http://127.0.0.1:5000",
-                                    client_id="oceana-api-client",
-                                    client_secret="bad_password")
+                              client_id="oceana-api-client",
+                              client_secret="bad_password")
     yield api_client

@@ -25,8 +25,8 @@ oceana_api_auth_header = """{{
 oceana_api_logger_level = config("OCEANA_API_LOGGER_LEVEL", None)
 oceana_api_logger_format = config("OCEANA_API_LOGGER_FORMAT", None)
 
-from .authenticate import Authenticate
-from .utils import string_base64, base64_string
+from .authenticate import Authenticate            # noqa
+from .utils import string_base64, base64_string   # noqa
 
 __all__ = ["oceana_api_url",
            "oceana_api_version"
