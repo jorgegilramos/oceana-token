@@ -68,14 +68,18 @@ pytest tests/unit/test_jwt.py -v -rP
 
 ```shell
 # Reinstall avoiding reinstalling dependencies
-pip install --upgrade --no-deps --force-reinstall dist\oceana_token-0.0.1-py3-none-any.whl
+pip install --upgrade --no-deps --force-reinstall dist\oceana_token-0.0.2-py3-none-any.whl
 ```
 
 ```shell
 # Reinstall with dependencies
-pip install dist\oceana_token-0.0.1-py3-none-any.whl --force-reinstall
+pip install dist\oceana_token-0.0.2-py3-none-any.whl --force-reinstall
 ```
 
+Check style guide enforcement
+```shell
+flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+```
 
 ## Dependencies
 
@@ -93,5 +97,5 @@ pip install dist\oceana_token-0.0.1-py3-none-any.whl --force-reinstall
 
 
 ## Releases
-**Version 0.0.1**:
+**Version 0.0.2**:
    - First version
