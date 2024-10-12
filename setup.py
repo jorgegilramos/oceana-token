@@ -7,7 +7,7 @@ import pathlib
 HERE = pathlib.Path(__file__).parent
 
 PACKAGE_NAME = "oceana_token"
-VERSION = "0.0.2"
+VERSION = "0.0.3"
 AUTHOR = "jorgegilramos"
 DESCRIPTION = "Oceana API library to manage authentication token and headers"
 LONG_DESCRIPTION = (HERE / "README.md").read_text(encoding="utf-8")
