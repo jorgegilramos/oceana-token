@@ -62,5 +62,6 @@ def mock_oceana_api_client():
     # Authentication in Oceana API
     api_client = Authenticate(url="http://127.0.0.1:5000",
                               client_id="oceana-api-client",
-                              client_secret="bad_password")
+                              client_secret="bad_password",
+                              api_version="v1")
     yield api_client

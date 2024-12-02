@@ -6,8 +6,10 @@ oceana_api_url = config("OCEANA_API_URL", None)
 oceana_api_client_id = config("OCEANA_API_CLIENT_ID", None)
 oceana_api_client_secret = config("OCEANA_API_CLIENT_SECRET", None)
 
-oceana_api_version = "v1"
-oceana_api_endpoint = f"{oceana_api_version}/auth/token"
+oceana_api_version = config("OCEANA_API_VERSION", None)  # Usually "v1"
+
+# oceana_api_endpoint = (f"{oceana_api_version}/" if oceana_api_version is not None else "") + "auth/token"
+oceana_api_endpoint = "auth/token"
 
 # Application will ask for a new token 10 seconds before its expiration
 oceana_api_token_threshold = int(config("OCEANA_API_TOKEN_THRESHOLD", default=10))
@@ -29,13 +31,13 @@ from .authenticate import Authenticate            # noqa
 from .utils import string_base64, base64_string   # noqa
 
 __all__ = ["oceana_api_url",
-           "oceana_api_version"
+           "oceana_api_version",
            "oceana_api_endpoint",
            "oceana_api_token_threshold",
            "oceana_api_token_timeout",
            "oceana_api_client_id",
            "oceana_api_client_secret",
-           "oceana_api_auth_header"
+           "oceana_api_auth_header",
            "oceana_api_logger_level",
            "oceana_api_logger_format",
            "Authenticate",

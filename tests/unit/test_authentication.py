@@ -14,6 +14,7 @@ def mock_env_variables(monkeypatch):
     monkeypatch.setenv("OCEANA_API_URL", "http://127.0.0.1:5000")
     monkeypatch.setenv("OCEANA_API_CLIENT_ID", "oceana-api-client")
     monkeypatch.setenv("OCEANA_API_CLIENT_SECRET", "bad_password")
+    monkeypatch.setenv("OCEANA_API_VERSION", "v1")
     monkeypatch.setenv("OCEANA_API_LOGGER_LEVEL", "DEBUG")
     monkeypatch.setenv("OCEANA_API_LOGGER_FORMAT", "%(asctime)s - [%(name)-25s] - %(levelname)-5s - %(message)s")
     yield
@@ -49,7 +50,8 @@ def test_get_token_parameters_ok():
     # Authentication in Oceana API
     oceana_api_client = Authenticate(url="http://127.0.0.1:5000",
                                      client_id="oceana-api-client",
-                                     client_secret="bad_password")
+                                     client_secret="bad_password",
+                                     api_version="v1")
     token = oceana_api_client.get_token()
     assert token == "Bearer <token>"
 
@@ -78,7 +80,8 @@ def test_get_token_credential_exception():
     # Authentication in Oceana API
     oceana_api_client = Authenticate(url="http://127.0.0.1:5000",
                                      client_id="oceana-api-client",
-                                     client_secret="error_password")
+                                     client_secret="error_password",
+                                     api_version="v1")
     # Validate exception
     with pytest.raises(ClientAuthenticationError) as exc_info:
         oceana_api_client.get_token()

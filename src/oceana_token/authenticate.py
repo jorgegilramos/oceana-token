@@ -6,8 +6,9 @@ from datetime import datetime
 from decouple import config
 
 
-from . import oceana_api_url, oceana_api_endpoint, oceana_api_client_id, oceana_api_client_secret, \
-    oceana_api_token_timeout, oceana_api_auth_header, oceana_api_logger_level, oceana_api_logger_format
+from . import oceana_api_url, oceana_api_version, oceana_api_endpoint, oceana_api_client_id, \
+    oceana_api_client_secret, oceana_api_token_timeout, oceana_api_auth_header, \
+    oceana_api_logger_level, oceana_api_logger_format
 
 from .exceptions import OceanaError, HttpResponseError, ServiceRequestError, ClientAuthenticationError
 from .utils import string_base64, base64_string
@@ -42,10 +43,11 @@ class Authenticate:
     _oceana_api_token_datetime: datetime = None
     _oceana_api_session: requests.Session = None
 
-    def __init__(self, url=None, client_id=None, client_secret=None, keep_session=False):
+    def __init__(self, url=None, client_id=None, client_secret=None, api_version=None, keep_session=False):
         self._url = url
         self._client_id = client_id
         self._client_secret = string_base64(client_secret)
+        self._api_version = api_version
         if keep_session:
             self._oceana_api_session = requests.Session()
         # Refresh logger environment variables
@@ -59,9 +61,10 @@ class Authenticate:
 
     def authenticate(self):
 
-        url, client_id, client_secret = self._get_parameters()
+        url, api_version, client_id, client_secret = self._get_parameters()
 
-        url = url + f"/{oceana_api_endpoint}"
+        url = url + (f"/{api_version}" if api_version is not None else "") + \
+            f"/{oceana_api_endpoint}"
 
         json_data = {
             "client_id": client_id,
@@ -99,7 +102,11 @@ class Authenticate:
 
         # Get token from response
         if status_code == 200:
-            token = token_json["data"]["GetToken"]["token"]
+            if token_json.get("token") is not None:
+                token = token_json.get("token")
+            else:
+                # Classic json
+                token = token_json["data"]["GetToken"]["token"]
             # Store token
             self._oceana_api_token = token
             self._oceana_api_token_datetime = datetime.now()
@@ -138,7 +145,8 @@ class Authenticate:
         Update authorization header
         """
         token = self.get_token()
-        headers.update({"Authorization": token} or {})
+        bearer_token = f"Bearer {token}" if not token.startswith("Bearer") else token
+        headers.update({"Authorization": bearer_token} or {})
         logger.debug(f"headers: {headers}")
         return headers
 
@@ -146,7 +154,9 @@ class Authenticate:
         """
         Update common api header with token for all requests
         """
-        _headers = json.loads(oceana_api_auth_header.format(token=self.get_token()))
+        token = self.get_token()
+        bearer_token = f"Bearer {token}" if not token.startswith("Bearer") else token
+        _headers = json.loads(oceana_api_auth_header.format(token=bearer_token))
         headers.update(_headers or {})
         logger.debug(f"headers: {headers}")
         return headers
@@ -163,10 +173,10 @@ class Authenticate:
             self._oceana_api_session.close()
             self._oceana_api_session = None
 
-    def _get_env_param(self, value, env_var, env_param, error_msg):
+    def _get_env_param(self, value, env_var, env_param, error_msg, nullable=False):
         if not value:
             ret_value = config(env_param, None) if env_var is None else env_var
-            if ret_value is None:
+            if ret_value is None and not nullable:
                 logger.error(f"{error_msg}")
                 raise OceanaError(error_msg)
         else:
@@ -181,6 +191,15 @@ class Authenticate:
             env_param="OCEANA_API_URL",
             error_msg="Oceana API url not specified. It can be set with url param " +
                       "at creation or setting environment variable OCEANA_API_URL")
+        url = url[:-1] if isinstance(url, str) and url.endswith("/") else url
+
+        api_version = self._get_env_param(
+            value=self._api_version,
+            env_var=oceana_api_version,
+            env_param="OCEANA_API_VERSION",
+            error_msg="Oceana API version not specified. It can be set with url param " +
+                      "at creation or setting environment variable OCEANA_API_VERSION",
+            nullable=True)
 
         client_id = self._get_env_param(
             value=self._client_id,
@@ -196,7 +215,7 @@ class Authenticate:
             error_msg="Oceana API client secret not specified. It can be set with url param " +
                       "at creation or setting environment variable OCEANA_API_CLIENT_SECRET")
 
-        return url, client_id, client_secret
+        return url, api_version, client_id, client_secret
 
     def _response_raise_error(self, response, token_json, status_code):
         try:
